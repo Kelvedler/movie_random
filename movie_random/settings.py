@@ -79,17 +79,26 @@ WSGI_APPLICATION = 'movie_random.wsgi.application'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
+    'default': {},
+    'users': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'users',
+        'USER': 'root',
+        'PASSWORD': db_password,
+        'HOST': '127.0.0.1',
+        'PORT': '3307',
+    },
+    'movies': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'movies',
         'USER': 'root',
         'PASSWORD': db_password,
         'HOST': '127.0.0.1',
         'PORT': '3307',
-
-    }
+    },
 }
 
+DATABASE_ROUTERS = ['routers.db_routers.AccountsRouter', 'routers.db_routers.MoviesRouter']
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
