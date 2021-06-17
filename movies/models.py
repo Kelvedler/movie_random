@@ -1,7 +1,7 @@
 from django.db import models
 
 
-class Movies(models.Model):
+class Movie(models.Model):
     title = models.CharField(max_length=200)
     year = models.PositiveSmallIntegerField()
     length = models.PositiveSmallIntegerField()
@@ -9,48 +9,63 @@ class Movies(models.Model):
     trailer = models.URLField()
     description = models.CharField(max_length=600)
 
+    def __str__(self):
+        return f'{self.title}, {self.year}'
 
-class Genres(models.Model):
+
+class Genre(models.Model):
     genre = models.CharField(max_length=40)
+
+    def __str__(self):
+        return self.genre
 
 
 class GenreMovieMap(models.Model):
-    movie = models.ForeignKey(Movies, on_delete=models.CASCADE)
-    genre = models.ForeignKey(Genres, on_delete=models.CASCADE)
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
+    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
 
 
-class Photos(models.Model):
-    movie = models.ForeignKey(Movies, on_delete=models.CASCADE)
+class Photo(models.Model):
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
     photo = models.URLField()
 
+    def __str__(self):
+        return self.photo
 
-class Reviews(models.Model):
-    movie = models.ForeignKey(Movies, on_delete=models.CASCADE)
+
+class Review(models.Model):
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
     user = models.ForeignKey('accounts.Users', on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
     review = models.CharField(max_length=4000)
     posted_at = models.DateField(auto_now_add=True)
 
+    def __str__(self):
+        return self.title
 
-class Personas(models.Model):
+
+class Persona(models.Model):
     first_name = models.CharField(max_length=40)
     last_name = models.CharField(max_length=40)
     birthdate = models.DateField()
     biography = models.CharField(max_length=4000)
 
-
-class Directors(models.Model):
-    movie = models.ForeignKey(Movies, on_delete=models.CASCADE)
-    persona = models.ForeignKey(Personas, on_delete=models.CASCADE)
+    def __str__(self):
+        return f'{self.first_name} {self.last_name}'
 
 
-class Writers(models.Model):
-    movie = models.ForeignKey(Movies, on_delete=models.CASCADE)
-    persona = models.ForeignKey(Personas, on_delete=models.CASCADE)
+class Director(models.Model):
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
+    persona = models.ForeignKey(Persona, on_delete=models.CASCADE)
+
+
+class Writer(models.Model):
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
+    persona = models.ForeignKey(Persona, on_delete=models.CASCADE)
     type = models.CharField(max_length=40)
 
 
-class Stars(models.Model):
-    movie = models.ForeignKey(Movies, on_delete=models.CASCADE)
-    persona = models.ForeignKey(Personas, on_delete=models.CASCADE)
+class Star(models.Model):
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
+    persona = models.ForeignKey(Persona, on_delete=models.CASCADE)
     character = models.CharField(max_length=80)
