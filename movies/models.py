@@ -1,6 +1,13 @@
 from django.db import models
 
 
+class Genre(models.Model):
+    genre = models.CharField(max_length=40)
+
+    def __str__(self):
+        return self.genre
+
+
 class Movie(models.Model):
     title = models.CharField(max_length=200)
     year = models.PositiveSmallIntegerField()
@@ -9,20 +16,19 @@ class Movie(models.Model):
     trailer = models.URLField()
     description = models.CharField(max_length=600)
 
+    class Meta:
+        unique_together = ['title', 'year']
+
     def __str__(self):
         return f'{self.title}, {self.year}'
-
-
-class Genre(models.Model):
-    genre = models.CharField(max_length=40)
-
-    def __str__(self):
-        return self.genre
 
 
 class GenreMovieMap(models.Model):
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ['movie', 'genre']
 
 
 class Photo(models.Model):
