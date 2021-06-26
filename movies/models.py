@@ -2,7 +2,10 @@ from django.db import models
 
 
 class Genre(models.Model):
-    genre = models.CharField(max_length=40)
+    genre = models.CharField(max_length=40, unique=True)
+
+    class Meta:
+        ordering = ['genre']
 
     def __str__(self):
         return self.genre
@@ -15,9 +18,11 @@ class Movie(models.Model):
     rating = models.DecimalField(max_digits=3, decimal_places=1)
     trailer = models.URLField()
     description = models.CharField(max_length=600)
+    genres = models.ManyToManyField(Genre, through='GenreMovieMap')
 
     class Meta:
         unique_together = ['title', 'year']
+        ordering = ['title']
 
     def __str__(self):
         return f'{self.title}, {self.year}'
@@ -29,6 +34,9 @@ class GenreMovieMap(models.Model):
 
     class Meta:
         unique_together = ['movie', 'genre']
+
+    def __str__(self):
+        return f'{self.genre} {self.movie}'
 
 
 class Photo(models.Model):

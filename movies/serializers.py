@@ -1,3 +1,4 @@
+from django.db import transaction
 from rest_framework import serializers
 from .models import (Movie, Genre, GenreMovieMap,
                      Photo, Review, Persona,
@@ -9,25 +10,31 @@ class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Genre
         fields = ['id', 'genre']
-
-
-class GenreMovieMapSerializer(serializers.ModelSerializer):
-    genre = GenreSerializer()
-
-    class Meta:
-        model = GenreMovieMap
-        fields = ['genre']
+        extra_kwargs = {'genre': {'validators': []}}
 
 
 class MovieSerializer(serializers.ModelSerializer):
-    genres = serializers.SerializerMethodField()
+    genres = GenreSerializer(many=True, required=False)
 
     class Meta:
         model = Movie
         fields = ['id', 'title', 'year', 'length', 'rating', 'trailer', 'description', 'genres']
 
-    def get_genres(self, obj):
-        qset = GenreMovieMap.objects.filter(movie=obj)
-        return [GenreMovieMapSerializer(g).data for g in qset]
+    def create(self, validated_data):
+        with transaction.atomic():
+            genres = validated_data.pop('genres')
+            instance = Movie.objects.create(**validated_data)
+            old_genres = Genre.objects.filter(genre__in=[g['genre'] for g in genres])
+            new_genres = [Genre(**g) for g in genres if not g['genre'] in [g.genre for g in old_genres]]
+            new_genres = Genre.objects.bulk_create(new_genres)
+            instance.genres.set([*new_genres, *old_genres])
+        return instance
 
 
+class GenreMovieMapSerializer(serializers.ModelSerializer):
+    genre = GenreSerializer()
+    movie = MovieSerializer()
+
+    class Meta:
+        model = GenreMovieMap
+        fields = ['genre', 'movie']

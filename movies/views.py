@@ -7,12 +7,12 @@ from .serializers import MovieSerializer, GenreSerializer, GenreMovieMapSerializ
 
 
 class MovieList(generics.ListCreateAPIView):
-    queryset = Movie.objects.all()
+    queryset = Movie.objects.prefetch_related('genres')
     serializer_class = MovieSerializer
 
 
 class MovieDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Movie.objects.all().select_related()
+    queryset = Movie.objects.all()
     serializer_class = MovieSerializer
 
 
