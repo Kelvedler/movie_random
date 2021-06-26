@@ -9,8 +9,8 @@ class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genre
-        fields = ['id', 'genre']
-        extra_kwargs = {'genre': {'validators': []}}
+        fields = ['id', 'name']
+        extra_kwargs = {'name': {'validators': []}}
 
 
 class MovieSerializer(serializers.ModelSerializer):
@@ -24,8 +24,8 @@ class MovieSerializer(serializers.ModelSerializer):
         with transaction.atomic():
             genres = validated_data.pop('genres')
             instance = Movie.objects.create(**validated_data)
-            old_genres = Genre.objects.filter(genre__in=[g['genre'] for g in genres])
-            new_genres = [Genre(**g) for g in genres if not g['genre'] in [g.genre for g in old_genres]]
+            old_genres = Genre.objects.filter(name__in=[g['name'] for g in genres])
+            new_genres = [Genre(**g) for g in genres if not g['name'] in [g.name for g in old_genres]]
             new_genres = Genre.objects.bulk_create(new_genres)
             instance.genres.set([*new_genres, *old_genres])
         return instance

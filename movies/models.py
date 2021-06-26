@@ -2,13 +2,13 @@ from django.db import models
 
 
 class Genre(models.Model):
-    genre = models.CharField(max_length=40, unique=True)
+    name = models.CharField(max_length=40, unique=True)
 
     class Meta:
-        ordering = ['genre']
+        ordering = ['name']
 
     def __str__(self):
-        return self.genre
+        return self.name
 
 
 class Movie(models.Model):
