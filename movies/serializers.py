@@ -30,6 +30,16 @@ class MovieSerializer(serializers.ModelSerializer):
             instance.genres.set([*new_genres, *old_genres])
         return instance
 
+    def update(self, instance, validated_data):
+        with transaction.atomic():
+            genres = validated_data.pop('genres')
+            instance = serializers.ModelSerializer.update(self, instance, validated_data)
+            old_genres = Genre.objects.filter(name__in=[g['name'] for g in genres])
+            new_genres = [Genre(**g) for g in genres if not g['name'] in [g.name for g in old_genres]]
+            new_genres = Genre.objects.bulk_create(new_genres)
+            instance.genres.set([*new_genres, *old_genres])
+        return instance
+
 
 class GenreMovieMapSerializer(serializers.ModelSerializer):
     genre = GenreSerializer()

@@ -12,7 +12,7 @@ class MovieList(generics.ListCreateAPIView):
 
 
 class MovieDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Movie.objects.all()
+    queryset = Movie.objects.prefetch_related('genres')
     serializer_class = MovieSerializer
 
 
