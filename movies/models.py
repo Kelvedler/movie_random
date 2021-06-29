@@ -40,7 +40,7 @@ class GenreMovieMap(models.Model):
 
 
 class Photo(models.Model):
-    movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
+    movie = models.ForeignKey(Movie, related_name='photos', on_delete=models.CASCADE)
     photo = models.URLField()
 
     def __str__(self):
