@@ -82,6 +82,8 @@ TEMPLATES = [
     },
 ]
 
+AUTH_USER_MODEL = 'accounts.Account'
+
 WSGI_APPLICATION = 'movie_random.wsgi.application'
 
 

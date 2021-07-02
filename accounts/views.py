@@ -3,8 +3,8 @@ from rest_framework.generics import CreateAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import UserSerializer
+from .serializers import AccountSerializer
 
 
 class Register(CreateAPIView):
-    serializer_class = UserSerializer
+    serializer_class = AccountSerializer
