@@ -1,9 +1,10 @@
 from django.shortcuts import render
 from rest_framework import generics, permissions
-from .models import (Movie, Genre, GenreMovieMap,
-                     Photo, Review, Persona,
+from .models import (Movie,
+                     Photo, Review, Genre, Persona,
                      Director, Writer, Star)
-from .serializers import MovieSerializer, GenreSerializer
+from .serializers import (MovieSerializer,
+                          ReviewSerializer, GenreSerializer)
 
 
 class MovieList(generics.ListCreateAPIView):
@@ -24,3 +25,12 @@ class GenreList(generics.ListCreateAPIView):
 class GenreDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+
+
+class ReviewList(generics.ListCreateAPIView):
+
+    def get_queryset(self):
+        return super().get_queryset().filter(movie=self.kwargs['movie_id'])
+
+    queryset = Review.objects.prefetch_related('movie', 'user')
+    serializer_class = ReviewSerializer

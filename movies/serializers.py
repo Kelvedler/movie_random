@@ -1,8 +1,7 @@
 from django.db import transaction
 from rest_framework import serializers
-from .models import (Movie, Genre, GenreMovieMap,
-                     Photo, Review, Persona,
-                     Director, Writer, Star)
+from .models import (Movie, Photo, Review, Genre,
+                     Persona, Director, Writer, Star)
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -60,3 +59,10 @@ class MovieSerializer(serializers.ModelSerializer):
             new_genres = Genre.objects.bulk_create(new_genres)
             instance.genres.set([*new_genres, *old_genres])
         return instance
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Review
+        fields = ['id', 'movie', 'user', 'title', 'review', 'posted_at']
