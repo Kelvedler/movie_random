@@ -55,6 +55,9 @@ class Review(models.Model):
     review = models.CharField(max_length=4000)
     posted_at = models.DateField(auto_now_add=True)
 
+    class Meta:
+        unique_together = ['user', 'movie']
+
     def __str__(self):
         return self.title
 
