@@ -38,6 +38,10 @@ class MovieSerializer(serializers.ModelSerializer):
 
             old_genres = Genre.objects.filter(name__in=[g['name'] for g in genres])
             new_genres = [Genre(**g) for g in genres if not g['name'] in [g.name for g in old_genres]]
+            last_id = Genre.objects.last().id if Genre.objects.last() else 0
+            for i in range(len(new_genres)):
+                new_genres[i].id = last_id + 1
+                last_id += 1
             new_genres = Genre.objects.bulk_create(new_genres)
             instance.genres.set([*new_genres, *old_genres])
         return instance
@@ -56,6 +60,10 @@ class MovieSerializer(serializers.ModelSerializer):
 
             old_genres = Genre.objects.filter(name__in=[g['name'] for g in genres])
             new_genres = [Genre(**g) for g in genres if not g['name'] in [g.name for g in old_genres]]
+            last_id = Genre.objects.last().id if Genre.objects.last() else 0
+            for i in range(len(new_genres)):
+                new_genres[i].id = last_id + 1
+                last_id += 1
             new_genres = Genre.objects.bulk_create(new_genres)
             instance.genres.set([*new_genres, *old_genres])
         return instance

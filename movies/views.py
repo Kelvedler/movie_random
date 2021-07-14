@@ -27,7 +27,7 @@ class GenreDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = GenreSerializer
 
 
-class ReviewList(generics.ListCreateAPIView):
+class MovieReviewList(generics.ListAPIView):
 
     def get_queryset(self):
         return super().get_queryset().filter(movie=self.kwargs['movie_id'])
