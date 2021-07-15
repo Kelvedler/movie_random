@@ -6,6 +6,7 @@ from rest_framework.authtoken.models import Token
 from .models import (Movie,
                      Photo, Review, Genre, Persona,
                      Director, Writer, Star)
+from accounts.models import Account
 from .serializers import (MovieSerializer,
                           ReviewSerializer, GenreSerializer)
 
@@ -66,6 +67,15 @@ class ReviewDetail(views.APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk, format=None):
+        user_id = Token.objects.get(key=request.auth.key).user_id
+        is_staff = Account.objects.get(id=user_id).is_staff
+        review = self.get_object(pk)
+        if not is_staff and review.user_id != user_id:
+            return Response({"message": "prohibited from deleting other users review"}, status=status.HTTP_400_BAD_REQUEST)
+        review.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class MovieReviewList(generics.ListAPIView):
