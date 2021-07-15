@@ -10,4 +10,6 @@ urlpatterns = [
     path('reviews/<int:pk>/', views.ReviewDetail.as_view()),
     path('reviews/movie=<int:movie_id>/', views.MovieReviewList.as_view()),
     path('reviews/account=<int:account_id>/', views.AccountReviewList.as_view()),
+    path('personas/', views.PersonaList.as_view()),
+    path('personas/<int:pk>/', views.PersonaDetail.as_view()),
 ]

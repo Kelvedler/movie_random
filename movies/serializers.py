@@ -75,3 +75,10 @@ class ReviewSerializer(serializers.ModelSerializer):
         model = Review
         fields = ['id', 'movie', 'title', 'review', 'user']
         read_only_fields = ['posted_at', ]
+
+
+class PersonaSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Persona
+        fields = ['id', 'first_name', 'last_name', 'birthdate', 'biography']

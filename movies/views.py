@@ -8,7 +8,7 @@ from .models import (Movie,
                      Director, Writer, Star)
 from accounts.models import Account
 from .serializers import (MovieSerializer,
-                          ReviewSerializer, GenreSerializer)
+                          ReviewSerializer, GenreSerializer, PersonaSerializer)
 
 
 class MovieList(generics.ListCreateAPIView):
@@ -94,3 +94,13 @@ class AccountReviewList(generics.ListAPIView):
 
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
+
+
+class PersonaList(generics.ListCreateAPIView):
+    queryset = Persona.objects.all()
+    serializer_class = PersonaSerializer
+
+
+class PersonaDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Persona.objects.all()
+    serializer_class = PersonaSerializer

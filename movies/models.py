@@ -68,6 +68,9 @@ class Persona(models.Model):
     birthdate = models.DateField()
     biography = models.CharField(max_length=4000)
 
+    class Meta:
+        unique_together = ['first_name', 'last_name', 'birthdate']
+
     def __str__(self):
         return f'{self.first_name} {self.last_name}'
 
