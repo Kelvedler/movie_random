@@ -12,6 +12,19 @@ class Genre(models.Model):
         return self.name
 
 
+class Persona(models.Model):
+    first_name = models.CharField(max_length=40)
+    last_name = models.CharField(max_length=40)
+    birthdate = models.DateField()
+    biography = models.CharField(max_length=4000)
+
+    class Meta:
+        unique_together = ['first_name', 'last_name', 'birthdate']
+
+    def __str__(self):
+        return f'{self.first_name} {self.last_name}'
+
+
 class Movie(models.Model):
     title = models.CharField(max_length=200)
     year = models.PositiveSmallIntegerField()
@@ -20,6 +33,7 @@ class Movie(models.Model):
     trailer = models.URLField()
     description = models.CharField(max_length=600)
     genres = models.ManyToManyField(Genre, through='GenreMovieMap')
+    directors = models.ManyToManyField(Persona, through='Director')
 
     class Meta:
         unique_together = ['title', 'year']
@@ -60,19 +74,6 @@ class Review(models.Model):
 
     def __str__(self):
         return self.title
-
-
-class Persona(models.Model):
-    first_name = models.CharField(max_length=40)
-    last_name = models.CharField(max_length=40)
-    birthdate = models.DateField()
-    biography = models.CharField(max_length=4000)
-
-    class Meta:
-        unique_together = ['first_name', 'last_name', 'birthdate']
-
-    def __str__(self):
-        return f'{self.first_name} {self.last_name}'
 
 
 class Director(models.Model):
