@@ -16,13 +16,13 @@ class Persona(models.Model):
     first_name = models.CharField(max_length=40)
     last_name = models.CharField(max_length=40)
     birthdate = models.DateField()
-    biography = models.CharField(max_length=4000)
+    biography = models.CharField(max_length=4000, blank=True)
 
     class Meta:
         unique_together = ['first_name', 'last_name', 'birthdate']
 
     def __str__(self):
-        return f'{self.first_name} {self.last_name}'
+        return f'{self.first_name} {self.last_name} {self.birthdate.strftime("%Y-%m-%d")}'
 
 
 class Movie(models.Model):

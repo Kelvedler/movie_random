@@ -56,18 +56,14 @@ class MovieSerializer(serializers.ModelSerializer):
             instance.genres.set([*new_genres, *old_genres])
 
             directors_q = Q()
-
             for d in directors:
                 directors_q |= Q(first_name=d['first_name'],
                                  last_name=d['last_name'],
                                  birthdate=d['birthdate'])
-
             old_directors = Persona.objects.filter(directors_q)
-
             new_directors = [Persona(**d) for d in directors if not
             d['first_name'] + d['last_name'] + d['birthdate'].strftime('%Y%m%d') in
             [d.first_name + d.last_name + d.birthdate.strftime('%Y%m%d') for d in old_directors]]
-
             last_id = Persona.objects.last().id if Persona.objects.last() else 0
             for i in range(len(new_directors)):
                 new_directors[i].id = last_id + 1
@@ -81,6 +77,7 @@ class MovieSerializer(serializers.ModelSerializer):
         with transaction.atomic():
             genres = validated_data.pop('genres')
             photos = validated_data.pop('photos')
+            directors = validated_data.pop('directors')
 
             instance = serializers.ModelSerializer.update(self, instance, validated_data)
 
@@ -97,6 +94,25 @@ class MovieSerializer(serializers.ModelSerializer):
                 last_id += 1
             new_genres = Genre.objects.bulk_create(new_genres)
             instance.genres.set([*new_genres, *old_genres])
+
+            if directors:
+                directors_q = Q()
+                for d in directors:
+                    directors_q |= Q(first_name=d['first_name'],
+                                     last_name=d['last_name'],
+                                     birthdate=d['birthdate'])
+                old_directors = Persona.objects.filter(directors_q)
+            else:
+                old_directors = []
+            new_directors = [Persona(**d) for d in directors if not
+            d['first_name'] + d['last_name'] + d['birthdate'].strftime('%Y%m%d') in
+            [d.first_name + d.last_name + d.birthdate.strftime('%Y%m%d') for d in old_directors]]
+            last_id = Persona.objects.last().id if Persona.objects.last() else 0
+            for i in range(len(new_directors)):
+                new_directors[i].id = last_id + 1
+                last_id += 1
+            new_directors = Persona.objects.bulk_create(new_directors)
+            instance.directors.set([*new_directors, *old_directors])
         return instance
 
 
