@@ -3,6 +3,12 @@ from django.db.models import Q
 from rest_framework import serializers, validators
 from .models import (Movie, Photo, Review, Genre,
                      Persona, Director, Writer, Star)
+from accounts.models import Account
+
+
+class GenreListSerializer(serializers.ListSerializer):
+    def to_internal_value(self, data):
+        return [{"name": d} for d in data]
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -11,6 +17,12 @@ class GenreSerializer(serializers.ModelSerializer):
         model = Genre
         fields = ['id', 'name']
         extra_kwargs = {'name': {'validators': []}}
+        list_serializer_class = GenreListSerializer
+
+
+class PhotoListSerializer(serializers.ListSerializer):
+    def to_internal_value(self, data):
+        return [{"photo": d} for d in data]
 
 
 class PhotoSerializer(serializers.ModelSerializer):
@@ -18,6 +30,7 @@ class PhotoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Photo
         fields = ['id', 'photo']
+        list_serializer_class = PhotoListSerializer
 
 
 class PersonaSerializer(serializers.ModelSerializer):
@@ -120,8 +133,10 @@ class MovieSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
+    movie_id = serializers.PrimaryKeyRelatedField(source='movie', queryset=Movie.objects.all())
+    account_id = serializers.PrimaryKeyRelatedField(source='account', queryset=Account.objects.all())
 
     class Meta:
         model = Review
-        fields = ['id', 'movie', 'title', 'review', 'user']
+        fields = ['id', 'movie_id', 'title', 'review', 'account_id']
         read_only_fields = ['posted_at', ]

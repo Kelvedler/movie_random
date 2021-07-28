@@ -64,13 +64,13 @@ class Photo(models.Model):
 
 class Review(models.Model):
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
-    user = models.ForeignKey(Account, on_delete=models.CASCADE)
+    account = models.ForeignKey(Account, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
     review = models.CharField(max_length=4000)
     posted_at = models.DateField(auto_now_add=True)
 
     class Meta:
-        unique_together = ['user', 'movie']
+        unique_together = ['account', 'movie']
 
     def __str__(self):
         return self.title

@@ -35,8 +35,8 @@ class ReviewCreate(views.APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, format=None):
-        user_id = Token.objects.get(key=request.auth.key).user_id
-        request.data['user'] = user_id
+        account_id = Token.objects.get(key=request.auth.key).user_id
+        request.data['account_id'] = account_id
         serializer = ReviewSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -54,14 +54,14 @@ class ReviewDetail(views.APIView):
             raise Http404
 
     def put(self, request, pk, format=None):
-        user_id = Token.objects.get(key=request.auth.key).user_id
+        account_id = Token.objects.get(key=request.auth.key).user_id
         review = self.get_object(pk)
-        if review.user_id != user_id:
+        if review.account_id != account_id:
             return Response({"message": "prohibited from changing other users review"}, status=status.HTTP_400_BAD_REQUEST)
-        if 'movie' in request.data and review.movie_id != request.data['movie']:
+        if 'movie_id' in request.data and review.movie_id != request.data['movie_id']:
             return Response({"message": "prohibited from changing movie"}, status=status.HTTP_400_BAD_REQUEST)
-        request.data['user'] = review.user_id
-        request.data['movie'] = review.movie_id
+        request.data['account_id'] = review.account_id
+        request.data['movie_id'] = review.movie_id
         serializer = ReviewSerializer(review, data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -69,10 +69,10 @@ class ReviewDetail(views.APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, format=None):
-        user_id = Token.objects.get(key=request.auth.key).user_id
-        is_staff = Account.objects.get(id=user_id).is_staff
+        account_id = Token.objects.get(key=request.auth.key).user_id
+        is_staff = Account.objects.get(id=account_id).is_staff
         review = self.get_object(pk)
-        if not is_staff and review.user_id != user_id:
+        if not is_staff and review.account_id != account_id:
             return Response({"message": "prohibited from deleting other users review"}, status=status.HTTP_400_BAD_REQUEST)
         review.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -90,7 +90,7 @@ class MovieReviewList(generics.ListAPIView):
 class AccountReviewList(generics.ListAPIView):
 
     def get_queryset(self):
-        return super().get_queryset().filter(user=self.kwargs['account_id'])
+        return super().get_queryset().filter(account=self.kwargs['account_id'])
 
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
