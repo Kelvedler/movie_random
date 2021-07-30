@@ -12,12 +12,12 @@ from .serializers import (MovieSerializer,
 
 
 class MovieList(generics.ListCreateAPIView):
-    queryset = Movie.objects.prefetch_related('genres', 'photos', 'directors')
+    queryset = Movie.objects.prefetch_related('genres', 'photos', 'directors', 'writers', 'stars')
     serializer_class = MovieSerializer
 
 
 class MovieDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Movie.objects.prefetch_related('genres', 'photos', 'directors')
+    queryset = Movie.objects.prefetch_related('genres', 'photos', 'directors', 'writers', 'stars')
     serializer_class = MovieSerializer
 
 

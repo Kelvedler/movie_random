@@ -33,7 +33,9 @@ class Movie(models.Model):
     trailer = models.URLField()
     description = models.CharField(max_length=600)
     genres = models.ManyToManyField(Genre, through='GenreMovieMap')
-    directors = models.ManyToManyField(Persona, through='Director')
+    directors = models.ManyToManyField(Persona, through='Director', related_name='directors')
+    writers = models.ManyToManyField(Persona, through='Writer', related_name='writers')
+    stars = models.ManyToManyField(Persona, through='Star', related_name='stars')
 
     class Meta:
         unique_together = ['title', 'year']

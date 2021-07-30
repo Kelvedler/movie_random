@@ -44,10 +44,15 @@ class MovieSerializer(serializers.ModelSerializer):
     genres = GenreSerializer(many=True, required=False)
     photos = PhotoSerializer(many=True, required=False)
     directors = PersonaSerializer(many=True, required=False, validators=[])
+    writers = PersonaSerializer(many=True, required=False, validators=[])
+    stars = PersonaSerializer(many=True, required=False, validators=[])
+
+    persona_filters = persona_columns = ['first_name', 'last_name', 'birthdate']
 
     class Meta:
         model = Movie
-        fields = ['id', 'title', 'year', 'length', 'rating', 'trailer', 'description', 'genres', 'photos', 'directors']
+        fields = ['id', 'title', 'year', 'length', 'rating', 'trailer',
+                  'description', 'genres', 'photos', 'directors', 'writers', 'stars']
 
     @staticmethod
     def new_and_old(model, validated_obj: list, filters: list, columns: list):
@@ -91,6 +96,8 @@ class MovieSerializer(serializers.ModelSerializer):
             genres = validated_data.pop('genres')
             photos = validated_data.pop('photos')
             directors = validated_data.pop('directors')
+            writers = validated_data.pop('writers')
+            stars = validated_data.pop('stars')
 
             instance = Movie.objects.create(**validated_data)
 
@@ -98,8 +105,9 @@ class MovieSerializer(serializers.ModelSerializer):
 
             instance.genres.set(self.new_and_old(Genre, genres, ['name__in'], ['name']))
 
-            persona_filters = persona_columns = ['first_name', 'last_name', 'birthdate']
-            instance.directors.set(self.new_and_old(Persona, directors, persona_filters, persona_columns))
+            instance.directors.set(self.new_and_old(Persona, directors, self.persona_filters, self.persona_columns))
+            instance.writers.set(self.new_and_old(Persona, writers, self.persona_filters, self.persona_columns))
+            instance.stars.set(self.new_and_old(Persona, stars, self.persona_filters, self.persona_columns))
 
         return instance
 
@@ -108,6 +116,8 @@ class MovieSerializer(serializers.ModelSerializer):
             genres = validated_data.pop('genres')
             photos = validated_data.pop('photos')
             directors = validated_data.pop('directors')
+            writers = validated_data.pop('writers')
+            stars = validated_data.pop('stars')
 
             instance = serializers.ModelSerializer.update(self, instance, validated_data)
 
@@ -118,8 +128,9 @@ class MovieSerializer(serializers.ModelSerializer):
 
             instance.genres.set(self.new_and_old(Genre, genres, ['name__in'], ['name']))
 
-            persona_filters = persona_columns = ['first_name', 'last_name', 'birthdate']
-            instance.directors.set(self.new_and_old(Persona, directors, persona_filters, persona_columns))
+            instance.directors.set(self.new_and_old(Persona, directors, self.persona_filters, self.persona_columns))
+            instance.writers.set(self.new_and_old(Persona, writers, self.persona_filters, self.persona_columns))
+            instance.stars.set(self.new_and_old(Persona, stars, self.persona_filters, self.persona_columns))
         return instance
 
 
