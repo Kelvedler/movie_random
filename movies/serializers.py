@@ -6,6 +6,21 @@ from .models import (Movie, Photo, Review, Genre,
 from accounts.models import Account
 
 
+class DynamicFieldsModelSerializer(serializers.ModelSerializer):
+
+    def __init__(self, *args, **kwargs):
+        fields = kwargs.pop('fields', None)
+
+        super(DynamicFieldsModelSerializer, self).__init__(*args, **kwargs)
+
+        if fields is not None:
+
+            allowed = set(fields)
+            existing = set(self.fields)
+            for field_name in existing - allowed:
+                self.fields.pop(field_name)
+
+
 class GenreListSerializer(serializers.ListSerializer):
     def to_internal_value(self, data):
         return [{"name": d} for d in data]
@@ -33,7 +48,7 @@ class PhotoSerializer(serializers.ModelSerializer):
         list_serializer_class = PhotoListSerializer
 
 
-class PersonaSerializer(serializers.ModelSerializer):
+class PersonaSerializer(DynamicFieldsModelSerializer):
 
     class Meta:
         model = Persona
@@ -41,13 +56,14 @@ class PersonaSerializer(serializers.ModelSerializer):
 
 
 class MovieSerializer(serializers.ModelSerializer):
+    persona_fields = 'id', 'first_name', 'last_name', 'birthdate'
+    persona_filters = persona_columns = ['first_name', 'last_name', 'birthdate']
+
     genres = GenreSerializer(many=True, required=False)
     photos = PhotoSerializer(many=True, required=False)
-    directors = PersonaSerializer(many=True, required=False, validators=[])
-    writers = PersonaSerializer(many=True, required=False, validators=[])
-    stars = PersonaSerializer(many=True, required=False, validators=[])
-
-    persona_filters = persona_columns = ['first_name', 'last_name', 'birthdate']
+    directors = PersonaSerializer(many=True, required=False, validators=[], fields=persona_fields)
+    writers = PersonaSerializer(many=True, required=False, validators=[], fields=persona_fields)
+    stars = PersonaSerializer(many=True, required=False, validators=[], fields=persona_fields)
 
     class Meta:
         model = Movie

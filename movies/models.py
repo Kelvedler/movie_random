@@ -86,10 +86,10 @@ class Director(models.Model):
 class Writer(models.Model):
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
     persona = models.ForeignKey(Persona, on_delete=models.CASCADE)
-    type = models.CharField(max_length=40)
+    type = models.CharField(max_length=40,  blank=True)
 
 
 class Star(models.Model):
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
     persona = models.ForeignKey(Persona, on_delete=models.CASCADE)
-    character = models.CharField(max_length=80)
+    character = models.CharField(max_length=80, blank=True)
