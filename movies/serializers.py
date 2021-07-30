@@ -49,6 +49,43 @@ class MovieSerializer(serializers.ModelSerializer):
         model = Movie
         fields = ['id', 'title', 'year', 'length', 'rating', 'trailer', 'description', 'genres', 'photos', 'directors']
 
+    @staticmethod
+    def new_and_old(model, validated_obj: list, filters: list, columns: list):
+        """
+        Receive model class, list of validated data of related model, list of filters and list of columns
+        that are unique together. Check if validated objects already exist in model, bulk_create if dont.
+        Return list of both new and old model instances.
+
+        :param model: class
+        :param validated_obj: list of validated data of related model
+        :param filters: list of strings, length is equal to length of columns
+        :param columns: list of strings
+        :return: [*new_instances, *old_instances]
+        """
+        if len(filters) == 1:
+            fltr = filters[0]
+            col = columns[0]
+            old_instances = model.objects.filter(**{fltr: [obj[col] for obj in validated_obj]})
+            new_instances = [model(**obj) for obj in validated_obj if not obj[col] in [getattr(obj, col) for obj in old_instances]]
+        else:
+            if validated_obj:
+                obj_q = Q()
+                for obj in validated_obj:
+                    obj_q |= Q(**{fltr: obj[col] for fltr, col in zip(filters, columns)})
+                old_instances = model.objects.filter(obj_q)
+            else:
+                old_instances = []
+            new_instances = [model(**data) for data in validated_obj if
+                           not {c: data[c] for c in columns} in [{c: getattr(data, c) for c in columns} for data in
+                                                                 old_instances]]
+
+        last_id = model.objects.last().id if model.objects.last() else 0
+        for i in range(len(new_instances)):
+            new_instances[i].id = last_id + 1
+            last_id += 1
+        new_instances = model.objects.bulk_create(new_instances)
+        return [*new_instances, *old_instances]
+
     def create(self, validated_data):
         with transaction.atomic():
             genres = validated_data.pop('genres')
@@ -59,33 +96,10 @@ class MovieSerializer(serializers.ModelSerializer):
 
             Photo.objects.bulk_create([Photo(**p, movie=instance) for p in photos])
 
-            old_genres = Genre.objects.filter(name__in=[g['name'] for g in genres])
-            new_genres = [Genre(**g) for g in genres if not g['name'] in [g.name for g in old_genres]]
-            last_id = Genre.objects.last().id if Genre.objects.last() else 0
-            for i in range(len(new_genres)):
-                new_genres[i].id = last_id + 1
-                last_id += 1
-            new_genres = Genre.objects.bulk_create(new_genres)
-            instance.genres.set([*new_genres, *old_genres])
+            instance.genres.set(self.new_and_old(Genre, genres, ['name__in'], ['name']))
 
-            if directors:
-                directors_q = Q()
-                for d in directors:
-                    directors_q |= Q(first_name=d['first_name'],
-                                     last_name=d['last_name'],
-                                     birthdate=d['birthdate'])
-                old_directors = Persona.objects.filter(directors_q)
-            else:
-                old_directors = []
-            new_directors = [Persona(**d) for d in directors if not
-            d['first_name'] + d['last_name'] + d['birthdate'].strftime('%Y%m%d') in
-            [d.first_name + d.last_name + d.birthdate.strftime('%Y%m%d') for d in old_directors]]
-            last_id = Persona.objects.last().id if Persona.objects.last() else 0
-            for i in range(len(new_directors)):
-                new_directors[i].id = last_id + 1
-                last_id += 1
-            new_directors = Persona.objects.bulk_create(new_directors)
-            instance.directors.set([*new_directors, *old_directors])
+            persona_filters = persona_columns = ['first_name', 'last_name', 'birthdate']
+            instance.directors.set(self.new_and_old(Persona, directors, persona_filters, persona_columns))
 
         return instance
 
@@ -102,33 +116,10 @@ class MovieSerializer(serializers.ModelSerializer):
             new_photos = [Photo(**p, movie=instance) for p in photos if not p['photo'] in [photo.photo for photo in related_photos]]
             Photo.objects.bulk_create(new_photos)
 
-            old_genres = Genre.objects.filter(name__in=[g['name'] for g in genres])
-            new_genres = [Genre(**g) for g in genres if not g['name'] in [g.name for g in old_genres]]
-            last_id = Genre.objects.last().id if Genre.objects.last() else 0
-            for i in range(len(new_genres)):
-                new_genres[i].id = last_id + 1
-                last_id += 1
-            new_genres = Genre.objects.bulk_create(new_genres)
-            instance.genres.set([*new_genres, *old_genres])
+            instance.genres.set(self.new_and_old(Genre, genres, ['name__in'], ['name']))
 
-            if directors:
-                directors_q = Q()
-                for d in directors:
-                    directors_q |= Q(first_name=d['first_name'],
-                                     last_name=d['last_name'],
-                                     birthdate=d['birthdate'])
-                old_directors = Persona.objects.filter(directors_q)
-            else:
-                old_directors = []
-            new_directors = [Persona(**d) for d in directors if not
-            d['first_name'] + d['last_name'] + d['birthdate'].strftime('%Y%m%d') in
-            [d.first_name + d.last_name + d.birthdate.strftime('%Y%m%d') for d in old_directors]]
-            last_id = Persona.objects.last().id if Persona.objects.last() else 0
-            for i in range(len(new_directors)):
-                new_directors[i].id = last_id + 1
-                last_id += 1
-            new_directors = Persona.objects.bulk_create(new_directors)
-            instance.directors.set([*new_directors, *old_directors])
+            persona_filters = persona_columns = ['first_name', 'last_name', 'birthdate']
+            instance.directors.set(self.new_and_old(Persona, directors, persona_filters, persona_columns))
         return instance
 
 
