@@ -175,8 +175,11 @@ class GenreSerializer(DynamicFieldsModelSerializer):
         fields = ['id', 'name', 'movies']
 
 
-class PersonaSerializer(serializers.ModelSerializer):
+class PersonaSerializer(DynamicFieldsModelSerializer):
+    directors = NestedMovieSerializer(many=True, required=False, fields=('id', 'title', 'year'))
+    writers = NestedMovieSerializer(many=True, required=False, fields=('id', 'title', 'year'))
+    stars = NestedMovieSerializer(many=True, required=False, fields=('id', 'title', 'year'))
 
     class Meta:
         model = Persona
-        fields = ['id', 'first_name', 'last_name', 'birthdate', 'biography']
+        fields = ['id', 'first_name', 'last_name', 'birthdate', 'biography', 'directors', 'writers', 'stars']

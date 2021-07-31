@@ -106,11 +106,20 @@ class AccountReviewList(generics.ListAPIView):
     serializer_class = ReviewSerializer
 
 
-class PersonaList(generics.ListCreateAPIView):
-    queryset = Persona.objects.all()
-    serializer_class = PersonaSerializer
+class PersonaList(views.APIView):
+    def get(self, request, format=None):
+        genres = Persona.objects.all()
+        serializer = PersonaSerializer(genres, many=True, fields=('id', 'first_name', 'last_name', 'birthdate'))
+        return Response(serializer.data)
+
+    def post(self, request, format=None):
+        serializer = PersonaSerializer(data=request.data, fields=('id', 'first_name', 'last_name', 'birthdate'))
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class PersonaDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Persona.objects.all()
+    queryset = Persona.objects.prefetch_related('directors', 'writers', 'stars')
     serializer_class = PersonaSerializer
