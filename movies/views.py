@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.db.models import Prefetch
 from django.http import Http404
 from rest_framework import generics, permissions, views, status
 from rest_framework.response import Response
@@ -21,13 +22,22 @@ class MovieDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = MovieSerializer
 
 
-class GenreList(generics.ListCreateAPIView):
-    queryset = Genre.objects.all()
-    serializer_class = GenreSerializer
+class GenreList(views.APIView):
+    def get(self, request, format=None):
+        genres = Genre.objects.all()
+        serializer = GenreSerializer(genres, many=True, fields=('id', 'name'))
+        return Response(serializer.data)
+
+    def post(self, request, format=None):
+        serializer = GenreSerializer(data=request.data, fields=('id', 'name'))
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class GenreDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Genre.objects.all()
+    queryset = Genre.objects.prefetch_related('movies')
     serializer_class = GenreSerializer
 
 

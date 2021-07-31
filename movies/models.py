@@ -32,7 +32,7 @@ class Movie(models.Model):
     rating = models.DecimalField(max_digits=3, decimal_places=1)
     trailer = models.URLField()
     description = models.CharField(max_length=600)
-    genres = models.ManyToManyField(Genre, through='GenreMovieMap')
+    genres = models.ManyToManyField(Genre, through='GenreMovieMap', related_name='movies')
     directors = models.ManyToManyField(Persona, through='Director', related_name='directors')
     writers = models.ManyToManyField(Persona, through='Writer', related_name='writers')
     stars = models.ManyToManyField(Persona, through='Star', related_name='stars')

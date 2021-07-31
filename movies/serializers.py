@@ -26,7 +26,7 @@ class GenreListSerializer(serializers.ListSerializer):
         return [{"name": d} for d in data]
 
 
-class GenreSerializer(serializers.ModelSerializer):
+class NestedGenreSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genre
@@ -48,7 +48,7 @@ class PhotoSerializer(serializers.ModelSerializer):
         list_serializer_class = PhotoListSerializer
 
 
-class PersonaSerializer(DynamicFieldsModelSerializer):
+class NestedPersonaSerializer(DynamicFieldsModelSerializer):
 
     class Meta:
         model = Persona
@@ -59,11 +59,11 @@ class MovieSerializer(serializers.ModelSerializer):
     persona_fields = 'id', 'first_name', 'last_name', 'birthdate'
     persona_filters = persona_columns = ['first_name', 'last_name', 'birthdate']
 
-    genres = GenreSerializer(many=True, required=False)
+    genres = NestedGenreSerializer(many=True, required=False)
     photos = PhotoSerializer(many=True, required=False)
-    directors = PersonaSerializer(many=True, required=False, validators=[], fields=persona_fields)
-    writers = PersonaSerializer(many=True, required=False, validators=[], fields=persona_fields)
-    stars = PersonaSerializer(many=True, required=False, validators=[], fields=persona_fields)
+    directors = NestedPersonaSerializer(many=True, required=False, validators=[], fields=persona_fields)
+    writers = NestedPersonaSerializer(many=True, required=False, validators=[], fields=persona_fields)
+    stars = NestedPersonaSerializer(many=True, required=False, validators=[], fields=persona_fields)
 
     class Meta:
         model = Movie
@@ -158,3 +158,25 @@ class ReviewSerializer(serializers.ModelSerializer):
         model = Review
         fields = ['id', 'movie_id', 'title', 'review', 'account_id']
         read_only_fields = ['posted_at', ]
+
+
+class NestedMovieSerializer(DynamicFieldsModelSerializer):
+
+    class Meta:
+        model = Movie
+        fields = ['id', 'title', 'year', 'length', 'rating', 'trailer', 'description']
+
+
+class GenreSerializer(DynamicFieldsModelSerializer):
+    movies = NestedMovieSerializer(many=True, required=False, fields=('id', 'title', 'year'))
+
+    class Meta:
+        model = Genre
+        fields = ['id', 'name', 'movies']
+
+
+class PersonaSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Persona
+        fields = ['id', 'first_name', 'last_name', 'birthdate', 'biography']
