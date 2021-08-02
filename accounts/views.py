@@ -17,7 +17,7 @@ class Logout(APIView):
         return Response(status=status.HTTP_200_OK)
 
 
-class ChangePassword(APIView):
+class PasswordChange(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, format=None):

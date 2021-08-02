@@ -7,5 +7,5 @@ urlpatterns = [
     path('register/', csrf_exempt(views.Register.as_view())),
     path('login/', auth_views.obtain_auth_token),
     path('logout/', views.Logout.as_view()),
-    path('changepassword/', views.ChangePassword.as_view())
+    path('password_change/', views.PasswordChange.as_view())
 ]
