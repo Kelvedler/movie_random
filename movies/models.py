@@ -61,7 +61,7 @@ class Photo(models.Model):
     photo = models.URLField()
 
     def __str__(self):
-        return self.photo
+        return f'{self.movie}: photo {self.id}'
 
 
 class Review(models.Model):
@@ -82,14 +82,23 @@ class Director(models.Model):
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
     persona = models.ForeignKey(Persona, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return f'{self.persona} in {self.movie}'
+
 
 class Writer(models.Model):
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
     persona = models.ForeignKey(Persona, on_delete=models.CASCADE)
     type = models.CharField(max_length=40,  blank=True)
 
+    def __str__(self):
+        return f'{self.persona} in {self.movie}'
+
 
 class Star(models.Model):
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
     persona = models.ForeignKey(Persona, on_delete=models.CASCADE)
     character = models.CharField(max_length=80, blank=True)
+
+    def __str__(self):
+        return f'{self.persona} in {self.movie}'
