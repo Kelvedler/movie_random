@@ -3,13 +3,16 @@ from django.db.models import Prefetch
 from django.http import Http404
 from rest_framework import generics, permissions, views, status
 from rest_framework.response import Response
+from movie_random import pagination
 from rest_framework.authtoken.models import Token
 from .models import (Movie,
                      Photo, Review, Genre, Persona,
                      Director, Writer, Star)
 from accounts.models import Account
-from .serializers import (MovieSerializer,
-                          ReviewSerializer, GenreSerializer, PersonaSerializer)
+from .serializers import (MovieSerializer, ReviewSerializer, GenreSerializer, PersonaSerializer)
+from drf_spectacular.views import extend_schema
+from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
+from drf_spectacular.utils import OpenApiExample
 
 
 class MovieList(generics.ListCreateAPIView):
@@ -22,11 +25,20 @@ class MovieDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = MovieSerializer
 
 
-class GenreList(views.APIView):
+class GenreList(views.APIView, pagination.LargeSetPagination):
+
+    @extend_schema(parameters=[OpenApiParameter('page', OpenApiTypes.INT, OpenApiParameter.QUERY)],
+                   request=GenreSerializer, responses=GenreSerializer,
+                   examples=[OpenApiExample(request_only=True, name='request',
+                                            value={"page": 0}), OpenApiExample(response_only=True, name='response',
+                                            value={"count": 123, "next": "http//api.example.org/accounts/genres/?page=4",
+                                                   "previous": "http//api.example.org/accounts/genres/?page=4",
+                                                   "results": [{"id": 0, "name": "string"}]})])
     def get(self, request, format=None):
         genres = Genre.objects.all()
-        serializer = GenreSerializer(genres, many=True, fields=('id', 'name'))
-        return Response(serializer.data)
+        results = self.paginate_queryset(genres, request, view=self)
+        serializer = GenreSerializer(results, many=True, fields=('id', 'name'))
+        return self.get_paginated_response(serializer.data)
 
     def post(self, request, format=None):
         serializer = GenreSerializer(data=request.data, fields=('id', 'name'))
@@ -106,11 +118,12 @@ class AccountReviewList(generics.ListAPIView):
     serializer_class = ReviewSerializer
 
 
-class PersonaList(views.APIView):
+class PersonaList(views.APIView, pagination.LargeSetPagination):
     def get(self, request, format=None):
-        genres = Persona.objects.all()
-        serializer = PersonaSerializer(genres, many=True, fields=('id', 'first_name', 'last_name', 'birthdate'))
-        return Response(serializer.data)
+        personas = Persona.objects.all()
+        results = self.paginate_queryset(personas, request, view=self)
+        serializer = PersonaSerializer(results, many=True, fields=('id', 'first_name', 'last_name', 'birthdate'))
+        return self.get_paginated_response(serializer.data)
 
     def post(self, request, format=None):
         serializer = PersonaSerializer(data=request.data, fields=('id', 'first_name', 'last_name', 'birthdate'))
