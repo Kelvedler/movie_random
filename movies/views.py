@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.db.models import Prefetch
 from django.http import Http404
-from rest_framework import generics, permissions, views, status
+from rest_framework import generics, permissions, views, viewsets, status
 from rest_framework.response import Response
 from movie_random import pagination
 from rest_framework.authtoken.models import Token
@@ -25,30 +25,14 @@ class MovieDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = MovieSerializer
 
 
-class GenreList(views.APIView, pagination.LargeSetPagination):
+class GenreList(generics.ListCreateAPIView):
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
 
-    @extend_schema(parameters=[OpenApiParameter('page', OpenApiTypes.INT, OpenApiParameter.QUERY)],
-                   request=GenreSerializer, responses=GenreSerializer,
-                   examples=[OpenApiExample(response_only=True, name='response',
-                                            value={"count": 123, "next": "http//api.example.org/movies/genres/?page=3",
-                                                   "previous": "http//api.example.org/movies/genres/?page=1",
-                                                   "results": [{"id": 0, "name": "string"}]})])
-    def get(self, request, format=None):
-        genres = Genre.objects.all()
-        results = self.paginate_queryset(genres, request, view=self)
-        serializer = GenreSerializer(results, many=True, fields=('id', 'name'))
-        return self.get_paginated_response(serializer.data)
-
-    @extend_schema(request=GenreSerializer, responses=GenreSerializer,
-                   examples=[OpenApiExample(request_only=True, name='request', value={"name": "string"}),
-                             OpenApiExample(response_only=True, name='response',
-                                            value={"id": 0, "name": "string"})])
-    def post(self, request, format=None):
-        serializer = GenreSerializer(data=request.data, fields=('id', 'name'))
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def get_serializer(self, *args, **kwargs):
+        serializer_class = self.get_serializer_class()
+        kwargs['fields'] = ['id', 'name']
+        return serializer_class(*args, **kwargs)
 
 
 class GenreDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -121,29 +105,15 @@ class AccountReviewList(generics.ListAPIView):
     serializer_class = ReviewSerializer
 
 
-class PersonaList(views.APIView, pagination.LargeSetPagination):
+class PersonaList(generics.ListCreateAPIView):
+    queryset = Persona.objects.all()
+    serializer_class = PersonaSerializer
 
-    @extend_schema(parameters=[OpenApiParameter('page', OpenApiTypes.INT, OpenApiParameter.QUERY)],
-                   request=PersonaSerializer, responses=PersonaSerializer,
-                   examples=[OpenApiExample(response_only=True, name='response',
-                                            value={"count": 123, "next": "http//api.example.org/movies/personas/?page=3",
-                                                   "previous": "http//api.example.org/movies/personas/?page=1",
-                                                   "results": [{"id": 0,
-                                                                "first_name": "string",
-                                                                "last_name": "string",
-                                                                "birthdate": "string"}]})])
-    def get(self, request, format=None):
-        personas = Persona.objects.all()
-        results = self.paginate_queryset(personas, request, view=self)
-        serializer = PersonaSerializer(results, many=True, fields=('id', 'first_name', 'last_name', 'birthdate'))
-        return self.get_paginated_response(serializer.data)
-
-    def post(self, request, format=None):
-        serializer = PersonaSerializer(data=request.data, fields=('id', 'first_name', 'last_name', 'birthdate'))
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def get_serializer(self, *args, **kwargs):
+        serializer_class = self.get_serializer_class()
+        if self.request.method == 'GET':
+            kwargs['fields'] = ['id', 'first_name', 'last_name', 'birthdate']
+        return serializer_class(*args, **kwargs)
 
 
 class PersonaDetail(generics.RetrieveUpdateDestroyAPIView):
