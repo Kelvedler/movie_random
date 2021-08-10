@@ -29,10 +29,9 @@ class GenreList(views.APIView, pagination.LargeSetPagination):
 
     @extend_schema(parameters=[OpenApiParameter('page', OpenApiTypes.INT, OpenApiParameter.QUERY)],
                    request=GenreSerializer, responses=GenreSerializer,
-                   examples=[OpenApiExample(request_only=True, name='request',
-                                            value={"page": 0}), OpenApiExample(response_only=True, name='response',
-                                            value={"count": 123, "next": "http//api.example.org/accounts/genres/?page=4",
-                                                   "previous": "http//api.example.org/accounts/genres/?page=4",
+                   examples=[OpenApiExample(response_only=True, name='response',
+                                            value={"count": 123, "next": "http//api.example.org/movies/genres/?page=3",
+                                                   "previous": "http//api.example.org/movies/genres/?page=1",
                                                    "results": [{"id": 0, "name": "string"}]})])
     def get(self, request, format=None):
         genres = Genre.objects.all()
@@ -40,6 +39,10 @@ class GenreList(views.APIView, pagination.LargeSetPagination):
         serializer = GenreSerializer(results, many=True, fields=('id', 'name'))
         return self.get_paginated_response(serializer.data)
 
+    @extend_schema(request=GenreSerializer, responses=GenreSerializer,
+                   examples=[OpenApiExample(request_only=True, name='request', value={"name": "string"}),
+                             OpenApiExample(response_only=True, name='response',
+                                            value={"id": 0, "name": "string"})])
     def post(self, request, format=None):
         serializer = GenreSerializer(data=request.data, fields=('id', 'name'))
         if serializer.is_valid():
@@ -119,6 +122,16 @@ class AccountReviewList(generics.ListAPIView):
 
 
 class PersonaList(views.APIView, pagination.LargeSetPagination):
+
+    @extend_schema(parameters=[OpenApiParameter('page', OpenApiTypes.INT, OpenApiParameter.QUERY)],
+                   request=PersonaSerializer, responses=PersonaSerializer,
+                   examples=[OpenApiExample(response_only=True, name='response',
+                                            value={"count": 123, "next": "http//api.example.org/movies/personas/?page=3",
+                                                   "previous": "http//api.example.org/movies/personas/?page=1",
+                                                   "results": [{"id": 0,
+                                                                "first_name": "string",
+                                                                "last_name": "string",
+                                                                "birthdate": "string"}]})])
     def get(self, request, format=None):
         personas = Persona.objects.all()
         results = self.paginate_queryset(personas, request, view=self)
