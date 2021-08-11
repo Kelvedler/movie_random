@@ -1,3 +1,5 @@
+import datetime
+
 from django.shortcuts import render
 from django.db.models import Prefetch
 from django.http import Http404
@@ -105,14 +107,26 @@ class AccountReviewList(generics.ListAPIView):
     serializer_class = ReviewSerializer
 
 
+@extend_schema(methods=['GET'], examples=[OpenApiExample(name='response',
+                                                         value={"count": 123,
+                                                                "next": "http//api.example.org/movies/personas/?page=3",
+                                                                "previous": "http//api.example.org/movies/personas/?page=1",
+                                                                "results": [
+                                                                    {"id": 0, "first_name": "string",
+                                                                     "last_name": "string",
+                                                                     "birthdate": datetime.date.today()}]})])
 class PersonaList(generics.ListCreateAPIView):
     queryset = Persona.objects.all()
     serializer_class = PersonaSerializer
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = PersonaSerializer(queryset, many=True, fields=['id', 'first_name', 'last_name', 'birthdate'])
+        return Response(serializer.data)
+
     def get_serializer(self, *args, **kwargs):
         serializer_class = self.get_serializer_class()
-        if self.request.method == 'GET':
-            kwargs['fields'] = ['id', 'first_name', 'last_name', 'birthdate']
+        kwargs['fields'] = ['id', 'first_name', 'last_name', 'birthdate', 'biography']
         return serializer_class(*args, **kwargs)
 
 
