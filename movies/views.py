@@ -1,19 +1,12 @@
 import datetime
-
-from django.shortcuts import render
-from django.db.models import Prefetch
 from django.http import Http404
-from rest_framework import generics, permissions, views, viewsets, status
+from rest_framework import generics, permissions, views, status
 from rest_framework.response import Response
-from movie_random import pagination
 from rest_framework.authtoken.models import Token
-from .models import (Movie,
-                     Photo, Review, Genre, Persona,
-                     Director, Writer, Star)
+from .models import Movie, Review, Genre, Persona
 from accounts.models import Account
-from .serializers import (MovieSerializer, ReviewSerializer, GenreSerializer, PersonaSerializer)
+from .serializers import MovieSerializer, ReviewSerializer, GenreSerializer, PersonaSerializer
 from drf_spectacular.views import extend_schema
-from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import OpenApiExample
 
 
@@ -22,6 +15,7 @@ class MovieList(generics.ListCreateAPIView):
     serializer_class = MovieSerializer
 
 
+@extend_schema(methods=['PATCH'], exclude=True)
 class MovieDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Movie.objects.prefetch_related('genres', 'photos', 'directors', 'writers', 'stars')
     serializer_class = MovieSerializer
@@ -37,15 +31,21 @@ class GenreList(generics.ListCreateAPIView):
         return serializer_class(*args, **kwargs)
 
 
+@extend_schema(methods=['PATCH'], exclude=True)
 class GenreDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Genre.objects.prefetch_related('movies')
     serializer_class = GenreSerializer
 
 
-class ReviewCreate(views.APIView):
+@extend_schema(description='account_id is taken from token', examples=[OpenApiExample(
+    name='response', response_only=True,
+    value={"id": 0, "movie_id": 0, "title": "string", "review": "string", "account_id": 0})])
+class ReviewCreate(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
 
-    def post(self, request, format=None):
+    def post(self, request, *args, **kwargs):
         account_id = Token.objects.get(key=request.auth.key).user_id
         request.data['account_id'] = account_id
         serializer = ReviewSerializer(data=request.data)
@@ -107,14 +107,10 @@ class AccountReviewList(generics.ListAPIView):
     serializer_class = ReviewSerializer
 
 
-@extend_schema(methods=['GET'], examples=[OpenApiExample(name='response',
-                                                         value={"count": 123,
-                                                                "next": "http//api.example.org/movies/personas/?page=3",
-                                                                "previous": "http//api.example.org/movies/personas/?page=1",
-                                                                "results": [
-                                                                    {"id": 0, "first_name": "string",
-                                                                     "last_name": "string",
-                                                                     "birthdate": datetime.date.today()}]})])
+@extend_schema(methods=['GET'], examples=[OpenApiExample(
+    name='response', value={"count": 123, "next": "http//api.example.org/movies/personas/?page=3",
+                            "previous": "http//api.example.org/movies/personas/?page=1", "results": [
+            {"id": 0, "first_name": "string", "last_name": "string", "birthdate": datetime.date.today()}]})])
 class PersonaList(generics.ListCreateAPIView):
     queryset = Persona.objects.all()
     serializer_class = PersonaSerializer
@@ -130,6 +126,7 @@ class PersonaList(generics.ListCreateAPIView):
         return serializer_class(*args, **kwargs)
 
 
+@extend_schema(methods=['PATCH'], exclude=True)
 class PersonaDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Persona.objects.prefetch_related('directors', 'writers', 'stars')
     serializer_class = PersonaSerializer
