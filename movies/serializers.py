@@ -3,7 +3,6 @@ from django.db.models import Q
 from rest_framework import serializers
 from .models import Movie, Photo, Review, Genre, Persona
 from accounts.models import Account
-from drf_spectacular.utils import extend_schema_serializer
 
 
 class DynamicFieldsModelSerializer(serializers.ModelSerializer):
@@ -150,8 +149,7 @@ class MovieSerializer(serializers.ModelSerializer):
         return instance
 
 
-@extend_schema_serializer(exclude_fields=['account_id'])
-class ReviewSerializer(serializers.ModelSerializer):
+class ReviewSerializer(DynamicFieldsModelSerializer):
     movie_id = serializers.PrimaryKeyRelatedField(source='movie', queryset=Movie.objects.all())
     account_id = serializers.PrimaryKeyRelatedField(source='account', queryset=Account.objects.all())
 

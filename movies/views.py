@@ -1,6 +1,5 @@
 import datetime
-from django.http import Http404
-from rest_framework import generics, permissions, views, status
+from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from .models import Movie, Review, Genre, Persona
@@ -45,6 +44,11 @@ class ReviewCreate(generics.CreateAPIView):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
 
+    def get_serializer(self, *args, **kwargs):
+        serializer_class = self.get_serializer_class()
+        kwargs['fields'] = ['id', 'movie_id', 'title', 'review']
+        return serializer_class(*args, **kwargs)
+
     def post(self, request, *args, **kwargs):
         account_id = Token.objects.get(key=request.auth.key).user_id
         request.data['account_id'] = account_id
@@ -55,40 +59,43 @@ class ReviewCreate(generics.CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ReviewDetail(views.APIView):
+class ReviewDetail(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
 
-    def get_object(self, pk):
-        try:
-            return Review.objects.get(pk=pk)
-        except Review.DoesNotExist:
-            raise Http404
-
-    def put(self, request, pk, format=None):
+    @extend_schema(examples=[OpenApiExample(name='request', request_only=True,
+                                            value={"id": 0, "title": "string", "review": "string"})])
+    def put(self, request, *args, **kwargs):
         account_id = Token.objects.get(key=request.auth.key).user_id
-        review = self.get_object(pk)
+        review = self.get_object()
         if review.account_id != account_id:
             return Response({"message": "prohibited from changing other users review"}, status=status.HTTP_400_BAD_REQUEST)
         if 'movie_id' in request.data and review.movie_id != request.data['movie_id']:
             return Response({"message": "prohibited from changing movie"}, status=status.HTTP_400_BAD_REQUEST)
         request.data['account_id'] = review.account_id
         request.data['movie_id'] = review.movie_id
-        serializer = ReviewSerializer(review, data=request.data)
+        serializer = ReviewSerializer(review, data=request.data, fields=['id', 'title', 'review'])
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, pk, format=None):
+    def delete(self, request, *args, **kwargs):
         account_id = Token.objects.get(key=request.auth.key).user_id
         is_staff = Account.objects.get(id=account_id).is_staff
-        review = self.get_object(pk)
+        review = self.get_object()
         if not is_staff and review.account_id != account_id:
             return Response({"message": "prohibited from deleting other users review"}, status=status.HTTP_400_BAD_REQUEST)
         review.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+@extend_schema(examples=[OpenApiExample(
+    name='response', response_only=True,
+    value={"count": 123, "next": "http//api.example.org/movies/reviews/{movie_id}/?page=3",
+           "previous": "http//api.example.org/movies/reviews/{movie_id}/?page=1",
+           "results": [{"id": 0, "title": "string", "review": "string", "account_id": 0}]})])
 class MovieReviewList(generics.ListAPIView):
 
     def get_queryset(self):
@@ -97,7 +104,17 @@ class MovieReviewList(generics.ListAPIView):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
 
+    def get_serializer(self, *args, **kwargs):
+        serializer_class = self.get_serializer_class()
+        kwargs['fields'] = ['id', 'title', 'review', 'account_id']
+        return serializer_class(*args, **kwargs)
 
+
+@extend_schema(examples=[OpenApiExample(
+    name='response', response_only=True,
+    value={"count": 123, "next": "http//api.example.org/movies/reviews/{account_id}/?page=3",
+           "previous": "http//api.example.org/movies/reviews/{account_id}/?page=1",
+           "results": [{"id": 0, "movie_id": 0, "title": "string", "review": "string"}]})])
 class AccountReviewList(generics.ListAPIView):
 
     def get_queryset(self):
@@ -105,6 +122,11 @@ class AccountReviewList(generics.ListAPIView):
 
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
+
+    def get_serializer(self, *args, **kwargs):
+        serializer_class = self.get_serializer_class()
+        kwargs['fields'] = ['id', 'title', 'review', 'movie_id']
+        return serializer_class(*args, **kwargs)
 
 
 @extend_schema(methods=['GET'], examples=[OpenApiExample(
