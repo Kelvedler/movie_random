@@ -1,0 +1,120 @@
+openapi: 3.0.1
+info:
+  title: Movie Random
+  description: Swagger documented API
+  contact:
+    email: hnflkmvjcm@gmail.com
+  version: 1.0.0
+servers:
+- url: http://127.0.0.1:8000
+tags:
+- name: Account
+  description: Authentication endpoints
+- name: Movie
+  description: Movie CRUD
+paths:
+  /accounts/register/:
+    post:
+      tags:
+      - Account
+      summary: Register new account
+      requestBody:
+        description: Account object with unique username and email
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+        required: true
+      responses:
+        201:
+          description: created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  username:
+                    type: string
+                  email:
+                    type: string
+                  token:
+                    type: string
+  /accounts/login/:
+    post:
+      tags:
+      - Account
+      summary: Login to account
+      requestBody:
+        description: Credentials
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+  /accounts/password_change/:
+    post:
+      tags:
+      - Account
+      summary: Change password of the account
+      requestBody:
+        description: valid and new password
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                old_password:
+                  type: string
+                new_password:
+                  type: string
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+      security:
+      - token_authorization:
+  /accounts/logout/:
+    get:
+      tags:
+      - Account
+      summary: Logout from account
+      responses:
+        200:
+          description: OK
+      security:
+      - token_authorization:
+components:
+  securitySchemes:
+    token_authorization:
+      type: apiKey
+      name: Authorization
+      in: header

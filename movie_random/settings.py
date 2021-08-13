@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
-    'drf_spectacular',
     'accounts.apps.AccountsConfig',
     'movies.apps.MoviesConfig',
     'randomizer.apps.RandomizerConfig',
@@ -51,14 +50,8 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
-SPECTACULAR_SETTINGS = {
-    'TITLE': 'Movie Random API',
-    'DESCRIPTION': 'OpenAPI 3.0 schema',
-    'VERSION': '1.0.0'
-}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
