@@ -10,7 +10,7 @@ servers:
 tags:
 - name: Account
   description: Authentication endpoints
-- name: Movie
+- name: Movies
   description: Movie CRUD
 paths:
   /accounts/register/:
@@ -65,7 +65,7 @@ paths:
         required: true
       responses:
         200:
-          description: OK
+          description: successful operation
           content:
             application/json:
               schema:
@@ -92,7 +92,7 @@ paths:
         required: true
       responses:
         200:
-          description: OK
+          description: successful operation
           content:
             application/json:
               schema:
@@ -109,12 +109,230 @@ paths:
       summary: Logout from account
       responses:
         200:
-          description: OK
+          description: successful operation
       security:
       - token_authorization:
+  /movies/:
+    get:
+      tags:
+      - Movies
+      summary: Returns list of movies
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    format: int32
+                  next:
+                    type: string
+                  previous:
+                    type: string
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MovieResponse'
+    post:
+      tags:
+      - Movies
+      summary: Create new movie object
+      requestBody:
+        description: Movie object with title, year unique set. Genres, photos, directors, writers and stars are optional
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Movie'
+      responses:
+        201:
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovieResponse'
+  /movies/{id}/:
+    get:
+      tags:
+      - Movies
+      summary: Find movie by ID
+      description: Returns a single movie
+      parameters:
+      - name: id
+        in: path
+        description: ID of movie to return
+        required: true
+        schema:
+          type: integer
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovieResponse'
+    put:
+      tags:
+      - Movies
+      summary: Update existing movie
+      requestBody:
+        description: Movie object that needs to be updated
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Movie'
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovieResponse'
 components:
+  schemas:
+    Movie:
+      type: object
+      properties:
+        title:
+          type: string
+        year:
+          type: integer
+        length:
+          type: integer
+        rating:
+          type: number
+          maximum: 9.9
+        trailer:
+          type: string
+        description:
+          type: string
+        genres:
+          type: array
+          items:
+            type: string
+        photos:
+          type: array
+          items:
+            type: string
+        directors:
+          type: array
+          items:
+            type: object
+            properties:
+              first_name:
+                type: string
+              last_name:
+                type: string
+              birthdate:
+                type: string
+                format: date
+        writers:
+          type: array
+          items:
+            type: object
+            properties:
+              first_name:
+                type: string
+              last_name:
+                type: string
+              birthdate:
+                type: string
+                format: date
+        stars:
+          type: array
+          items:
+            type: object
+            properties:
+              first_name:
+                type: string
+              last_name:
+                type: string
+              birthdate:
+                type: string
+                format: date
+    MovieResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        year:
+          type: integer
+        length:
+          type: integer
+        rating:
+          type: number
+          maximum: 9.9
+        trailer:
+          type: string
+        description:
+          type: string
+        genres:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+        photos:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              photo:
+                type: string
+        directors:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              first_name:
+                type: string
+              last_name:
+                type: string
+              birthdate:
+                type: string
+                format: date
+        writers:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              first_name:
+                type: string
+              last_name:
+                type: string
+              birthdate:
+                type: string
+                format: date
+        stars:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              first_name:
+                type: string
+              last_name:
+                type: string
+              birthdate:
+                type: string
+                format: date
   securitySchemes:
     token_authorization:
       type: apiKey
       name: Authorization
       in: header
+      description: Add "Token " prefix to the token value
