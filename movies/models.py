@@ -73,6 +73,7 @@ class Review(models.Model):
 
     class Meta:
         unique_together = ['account', 'movie']
+        ordering = ['title']
 
     def __str__(self):
         return self.title
@@ -89,7 +90,6 @@ class Director(models.Model):
 class Writer(models.Model):
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
     persona = models.ForeignKey(Persona, on_delete=models.CASCADE)
-    type = models.CharField(max_length=40,  blank=True)
 
     def __str__(self):
         return f'{self.persona} in {self.movie}'
@@ -98,7 +98,6 @@ class Writer(models.Model):
 class Star(models.Model):
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
     persona = models.ForeignKey(Persona, on_delete=models.CASCADE)
-    character = models.CharField(max_length=80, blank=True)
 
     def __str__(self):
         return f'{self.persona} in {self.movie}'

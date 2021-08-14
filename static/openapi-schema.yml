@@ -65,7 +65,7 @@ paths:
         required: true
       responses:
         200:
-          description: successful operation
+          description: Successful operation
           content:
             application/json:
               schema:
@@ -92,7 +92,7 @@ paths:
         required: true
       responses:
         200:
-          description: successful operation
+          description: Successful operation
           content:
             application/json:
               schema:
@@ -109,7 +109,7 @@ paths:
       summary: Logout from account
       responses:
         200:
-          description: successful operation
+          description: Successful operation
       security:
       - token_authorization:
   /movies/:
@@ -117,9 +117,15 @@ paths:
       tags:
       - Movies
       summary: Returns list of movies
+      parameters:
+      - name: page
+        in: query
+        description: Page of a list
+        schema:
+          type: integer
       responses:
         200:
-          description: successful operation
+          description: Successful operation
           content:
             application/json:
               schema:
@@ -146,9 +152,10 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Movie'
+        required: true
       responses:
         201:
-          description: created
+          description: Created
           content:
             application/json:
               schema:
@@ -168,7 +175,7 @@ paths:
           type: integer
       responses:
         200:
-          description: successful operation
+          description: Successful operation
           content:
             application/json:
               schema:
@@ -177,21 +184,525 @@ paths:
       tags:
       - Movies
       summary: Update existing movie
+      parameters:
+        - name: id
+          in: path
+          description: ID of movie to return
+          required: true
+          schema:
+            type: integer
       requestBody:
         description: Movie object that needs to be updated
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/Movie'
+        required: true
       responses:
         200:
-          description: successful operation
+          description: Successful operation
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/MovieResponse'
+    delete:
+      tags:
+      - Movies
+      summary: Delete movie
+      parameters:
+        - name: id
+          in: path
+          description: ID of movie to delete
+          required: true
+          schema:
+            type: integer
+      responses:
+        204:
+          description: Successful operation
+  /movies/reviews/:
+    post:
+      tags:
+      - Movies
+      summary: Create a movie review
+      requestBody:
+        description: Review object. Limited to one review per movie for an account
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                movie_id:
+                  type: integer
+                title:
+                  type: string
+                review:
+                  type: string
+        required: true
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewResponse'
+      security:
+        - token_authorization:
+  /movies/reviews/{id}/:
+    put:
+      tags:
+      - Movies
+      summary: Update existing review
+      parameters:
+        - name: id
+          in: path
+          description: ID of review to return
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: Review object. Only update account's own reviews, can't change movie.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                review:
+                  type: string
+        required: true
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewResponse'
+      security:
+        - token_authorization:
+    delete:
+      tags:
+      - Movies
+      summary: Delete review
+      parameters:
+        - name: id
+          in: path
+          description: ID of review to delete. Can be performed by admin or related account.
+          required: true
+          schema:
+            type: integer
+      responses:
+        204:
+          description: Successful operation
+      security:
+        - token_authorization:
+  /movies/reviews/movie/{id}/:
+    get:
+      tags:
+      - Movies
+      summary: Returns list of reviews related to particular movie
+      parameters:
+        - name: page
+          in: query
+          description: Page of a list
+          schema:
+            type: integer
+        - name: id
+          in: path
+          description: ID of related movie
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    format: int32
+                  next:
+                    type: string
+                  previous:
+                    type: string
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        title:
+                          type: string
+                        review:
+                          type: string
+                        account_id:
+                          type: integer
+  /movies/reviews/account/{id}/:
+    get:
+      tags:
+      - Movies
+      summary: Returns list of reviews related to particular account
+      parameters:
+        - name: page
+          in: query
+          description: Page of a list
+          schema:
+            type: integer
+        - name: id
+          in: path
+          description: ID of related account
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    format: int32
+                  next:
+                    type: string
+                  previous:
+                    type: string
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        movie_id:
+                          type: integer
+                        title:
+                          type: string
+                        review:
+                          type: string
+  /movies/personas/:
+    get:
+      tags:
+      - Movies
+      summary: Returns list of movie industry personas
+      parameters:
+        - name: page
+          in: query
+          description: Page of a list
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    format: int32
+                  next:
+                    type: string
+                  previous:
+                    type: string
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PersonaResponse'
+    post:
+      tags:
+      - Movies
+      summary: Create new persona object
+      requestBody:
+        description: Persona object with first_name, last_name, birthdate unique set. Biography is optional.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonaDetailed'
+        required: true
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaDetailedResponse'
+  /movies/personas/{id}/:
+    get:
+      tags:
+      - Movies
+      summary: Find persona by ID
+      parameters:
+        - name: id
+          in: path
+          description: ID of persona to return
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaRelatedResponse'
+    put:
+      tags:
+      - Movies
+      summary: Update existing persona
+      parameters:
+        - name: id
+          in: path
+          description: ID of persona to return
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: Persona object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonaDetailed'
+        required: true
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaRelatedResponse'
+    delete:
+      tags:
+      - Movies
+      summary: Delete persona
+      parameters:
+        - name: id
+          in: path
+          description: ID of persona to delete
+          required: true
+          schema:
+            type: integer
+      responses:
+        204:
+          description: Successful operation
+  /movies/genres/:
+    get:
+      tags:
+      - Movies
+      summary: Returns list of genres
+      parameters:
+        - name: page
+          in: query
+          description: Page of a list
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    format: int32
+                  next:
+                    type: string
+                  previous:
+                    type: string
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/GenreResponse'
+    post:
+      tags:
+      - Movies
+      summary: Create new genre object
+      requestBody:
+        description: Genre object
+        content:
+          application/json:
+            schema:
+                $ref: '#/components/schemas/Genre'
+        required: true
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenreResponse'
+  /movies/genres/{id}/:
+    get:
+      tags:
+      - Movies
+      summary: Find genre by ID
+      parameters:
+        - name: id
+          in: path
+          description: ID of genre to return
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenreDetailResponse'
+    put:
+      tags:
+      - Movies
+      summary: Update existing genre
+      parameters:
+        - name: id
+          in: path
+          description: ID of genre to return
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenreDetailResponse'
+    delete:
+      tags:
+      - Movies
+      summary: Delete genre
+      parameters:
+        - name: id
+          in: path
+          description: ID of genre to delete
+          required: true
+          schema:
+            type: integer
+      responses:
+        204:
+          description: Successful operation
 components:
   schemas:
+    Persona:
+      type: object
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        birthdate:
+          type: string
+          format: date
+    PersonaResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        first_name:
+          type: string
+        last_name:
+          type: string
+        birthdate:
+          type: string
+          format: date
+    PersonaDetailed:
+      type: object
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        birthdate:
+          type: string
+          format: date
+        biography:
+          type: string
+    PersonaDetailedResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        birthdate:
+          type: string
+          format: date
+        biography:
+          type: string
+    PersonaRelatedResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        first_name:
+          type: string
+        last_name:
+          type: string
+        birthdate:
+          type: string
+          format: date
+        biography:
+          type: string
+        directors:
+          type: array
+          items:
+            $ref: '#/components/schemas/MovieLightResponse'
+        writers:
+          type: array
+          items:
+            $ref: '#/components/schemas/MovieLightResponse'
+        stars:
+          type: array
+          items:
+            $ref: '#/components/schemas/MovieLightResponse'
+    ReviewResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        movie_id:
+          type: integer
+        title:
+          type: string
+        review:
+          type: string
+        account_id:
+          type: string
+    Genre:
+      type: object
+      properties:
+        name:
+          type: string
+    GenreResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+    GenreDetailResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        movies:
+          type: array
+          items:
+            $ref: '#/components/schemas/MovieLightResponse'
     Movie:
       type: object
       properties:
@@ -219,39 +730,15 @@ components:
         directors:
           type: array
           items:
-            type: object
-            properties:
-              first_name:
-                type: string
-              last_name:
-                type: string
-              birthdate:
-                type: string
-                format: date
+            $ref: '#/components/schemas/Persona'
         writers:
           type: array
           items:
-            type: object
-            properties:
-              first_name:
-                type: string
-              last_name:
-                type: string
-              birthdate:
-                type: string
-                format: date
+            $ref: '#/components/schemas/Persona'
         stars:
           type: array
           items:
-            type: object
-            properties:
-              first_name:
-                type: string
-              last_name:
-                type: string
-              birthdate:
-                type: string
-                format: date
+            $ref: '#/components/schemas/Persona'
     MovieResponse:
       type: object
       properties:
@@ -273,12 +760,7 @@ components:
         genres:
           type: array
           items:
-            type: object
-            properties:
-              id:
-                type: integer
-              name:
-                type: string
+            $ref: '#/components/schemas/GenreResponse'
         photos:
           type: array
           items:
@@ -291,45 +773,25 @@ components:
         directors:
           type: array
           items:
-            type: object
-            properties:
-              id:
-                type: integer
-              first_name:
-                type: string
-              last_name:
-                type: string
-              birthdate:
-                type: string
-                format: date
+            $ref: '#/components/schemas/PersonaResponse'
         writers:
           type: array
           items:
-            type: object
-            properties:
-              id:
-                type: integer
-              first_name:
-                type: string
-              last_name:
-                type: string
-              birthdate:
-                type: string
-                format: date
+            $ref: '#/components/schemas/PersonaResponse'
         stars:
           type: array
           items:
-            type: object
-            properties:
-              id:
-                type: integer
-              first_name:
-                type: string
-              last_name:
-                type: string
-              birthdate:
-                type: string
-                format: date
+            $ref: '#/components/schemas/PersonaResponse'
+    MovieLightResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        year:
+          type: string
+          format: date
   securitySchemes:
     token_authorization:
       type: apiKey

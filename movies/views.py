@@ -65,7 +65,7 @@ class ReviewDetail(generics.GenericAPIView):
             return Response({"message": "prohibited from changing movie"}, status=status.HTTP_400_BAD_REQUEST)
         request.data['account_id'] = review.account_id
         request.data['movie_id'] = review.movie_id
-        serializer = ReviewSerializer(review, data=request.data, fields=['id', 'title', 'review'])
+        serializer = ReviewSerializer(review, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
