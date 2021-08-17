@@ -113,14 +113,12 @@ class PersonaList(generics.ListCreateAPIView):
     queryset = Persona.objects.all()
     serializer_class = PersonaSerializer
 
-    def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        serializer = PersonaSerializer(queryset, many=True, fields=['id', 'first_name', 'last_name', 'birthdate'])
-        return Response(serializer.data)
-
     def get_serializer(self, *args, **kwargs):
         serializer_class = self.get_serializer_class()
-        kwargs['fields'] = ['id', 'first_name', 'last_name', 'birthdate', 'biography']
+        if self.request.method == 'GET':
+            kwargs['fields'] = ['id', 'first_name', 'last_name', 'birthdate']
+        else:
+            kwargs['fields'] = ['id', 'first_name', 'last_name', 'birthdate', 'biography']
         return serializer_class(*args, **kwargs)
 
 

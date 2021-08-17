@@ -56,7 +56,7 @@ class NestedPersonaSerializer(DynamicFieldsModelSerializer):
 
 class MovieSerializer(serializers.ModelSerializer):
     persona_fields = 'id', 'first_name', 'last_name', 'birthdate'
-    persona_filters = persona_columns = ['first_name', 'last_name', 'birthdate']
+    persona_columns = ['first_name', 'last_name', 'birthdate']
 
     genres = NestedGenreSerializer(many=True, required=False)
     photos = PhotoSerializer(many=True, required=False)
@@ -70,36 +70,51 @@ class MovieSerializer(serializers.ModelSerializer):
                   'description', 'genres', 'photos', 'directors', 'writers', 'stars']
 
     @staticmethod
-    def new_and_old(model, validated_obj: list, filters: list, columns: list):
+    def bulk_get_or_create__in(model, column: str, validated_obj: list):
         """
-        Receive model class, list of validated data of related model, list of filters and list of columns
-        that are unique together. Check if validated objects already exist in model, bulk_create if dont.
-        Return list of both new and old model instances.
+        Filter model column against the list of validated objects to either retrieve existing instances or create new.
+        Return the list of both new and old instances.
 
         :param model: class
+        :param column: string
         :param validated_obj: list of validated data of related model
-        :param filters: list of strings, length is equal to length of columns
-        :param columns: list of strings
         :return: [*new_instances, *old_instances]
         """
-        if len(filters) == 1:
-            fltr = filters[0]
-            col = columns[0]
-            old_instances = model.objects.filter(**{fltr: [obj[col] for obj in validated_obj]})
-            new_instances = [model(**obj) for obj in validated_obj if not obj[col] in [getattr(obj, col) for obj in old_instances]]
-        else:
-            if validated_obj:
-                obj_q = Q()
-                for obj in validated_obj:
-                    obj_q |= Q(**{fltr: obj[col] for fltr, col in zip(filters, columns)})
-                old_instances = model.objects.filter(obj_q)
-            else:
-                old_instances = []
-            new_instances = [model(**data) for data in validated_obj if
-                           not {c: data[c] for c in columns} in [{c: getattr(data, c) for c in columns} for data in
-                                                                 old_instances]]
+        old_instances = model.objects.filter(**{column + "__in": [obj[column] for obj in validated_obj]})
+        new_instances = [model(**obj) for obj in validated_obj if
+                         not obj[column] in [getattr(obj, column) for obj in old_instances]]
 
-        last_id = model.objects.last().id if model.objects.last() else 0
+        last_id = model.objects.order_by('id').last().id if model.objects.last() else 0
+        for i in range(len(new_instances)):
+            new_instances[i].id = last_id + 1
+            last_id += 1
+        new_instances = model.objects.bulk_create(new_instances)
+        return [*new_instances, *old_instances]
+
+    @staticmethod
+    def bulk_get_or_create_unique_together(model, columns: list, validated_obj: list):
+        """
+        Filter list of unique together columns in model against the list of validated objects
+        to either retrieve existing instances or create new.
+        Return the list of both new and old instances
+
+        :param model: class
+        :param columns: list of strings
+        :param validated_obj: list of validated data of related model
+        :return: [*new_instances, *old_instances]
+        """
+        if validated_obj:
+            obj_q = Q()
+            for obj in validated_obj:
+                obj_q |= Q(**{col: obj[col] for col in columns})
+            old_instances = model.objects.filter(obj_q)
+        else:
+            old_instances = []
+        new_instances = [model(**data) for data in validated_obj if
+                         not {c: data[c] for c in columns} in [{c: getattr(data, c) for c in columns} for data in
+                                                               old_instances]]
+
+        last_id = model.objects.order_by('id').last().id if model.objects.last() else 0
         for i in range(len(new_instances)):
             new_instances[i].id = last_id + 1
             last_id += 1
@@ -118,11 +133,11 @@ class MovieSerializer(serializers.ModelSerializer):
 
             Photo.objects.bulk_create([Photo(**p, movie=instance) for p in photos])
 
-            instance.genres.set(self.new_and_old(Genre, genres, ['name__in'], ['name']))
+            instance.genres.set(self.bulk_get_or_create__in(Genre, 'name', genres))
 
-            instance.directors.set(self.new_and_old(Persona, directors, self.persona_filters, self.persona_columns))
-            instance.writers.set(self.new_and_old(Persona, writers, self.persona_filters, self.persona_columns))
-            instance.stars.set(self.new_and_old(Persona, stars, self.persona_filters, self.persona_columns))
+            instance.directors.set(self.bulk_get_or_create_unique_together(Persona, self.persona_columns, directors))
+            instance.writers.set(self.bulk_get_or_create_unique_together(Persona, self.persona_columns, writers))
+            instance.stars.set(self.bulk_get_or_create_unique_together(Persona, self.persona_columns, stars))
 
         return instance
 
@@ -141,11 +156,11 @@ class MovieSerializer(serializers.ModelSerializer):
             new_photos = [Photo(**p, movie=instance) for p in photos if not p['photo'] in [photo.photo for photo in related_photos]]
             Photo.objects.bulk_create(new_photos)
 
-            instance.genres.set(self.new_and_old(Genre, genres, ['name__in'], ['name']))
+            instance.genres.set(self.bulk_get_or_create__in(Genre, 'name', genres))
 
-            instance.directors.set(self.new_and_old(Persona, directors, self.persona_filters, self.persona_columns))
-            instance.writers.set(self.new_and_old(Persona, writers, self.persona_filters, self.persona_columns))
-            instance.stars.set(self.new_and_old(Persona, stars, self.persona_filters, self.persona_columns))
+            instance.directors.set(self.bulk_get_or_create_unique_together(Persona, self.persona_columns, directors))
+            instance.writers.set(self.bulk_get_or_create_unique_together(Persona, self.persona_columns, writers))
+            instance.stars.set(self.bulk_get_or_create_unique_together(Persona, self.persona_columns, stars))
         return instance
 
 
