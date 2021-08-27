@@ -23,7 +23,7 @@ TEMPLATE_DIR = BASE_DIR.joinpath('templates')
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY', 'secret_key')
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = []
 
@@ -92,11 +92,11 @@ WSGI_APPLICATION = 'movie_random.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'movie_random',
-        'USER': 'root',
+        'NAME': 'heroku_4b0c09c1a21b0f0',
+        'USER': 'b68bd063c4b909',
         'PASSWORD': os.environ.get('DB_PASSWORD'),
-        'HOST': '127.0.0.1',
-        'PORT': '3307',
+        'HOST': 'eu-cdbr-west-01.cleardb.com',
+        'PORT': '3306',
     },
 }
 
